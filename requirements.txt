@@ -69,8 +69,6 @@ notebook_shim==0.2.4
 numpy==1.26.4
 overrides==7.7.0
 packaging==24.2
-pandas==2.1.0
-pandocfilters==1.5.1
 parso==0.8.4
 pillow==11.3.0
 platformdirs==4.3.6
@@ -118,4 +116,5 @@ webencodings==0.5.1
 websocket-client==1.8.0
 Werkzeug==2.2.3
 widgetsnbextension==4.0.13
+
 
