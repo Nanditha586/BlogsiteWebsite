@@ -1,0 +1,167 @@
+{% load static %}
+<html>
+<head>
+    <title>Create Blog Post</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        .top-section {
+            background-color: teal;
+            color: white;
+            padding: 25px;
+        }
+
+        .top-section h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .top-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .bottom-section {
+            background-color: white;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .form-box {
+            width: 100%;
+            max-width: 650px;
+            padding: 25px;
+            background-color: #fff;
+            box-shadow: 0 0 12px rgba(0,0,0,0.15);
+            border-radius: 10px;
+            border: 2px solid teal;
+        }
+
+        .form-box h2 {
+            color: teal;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .btn-primary {
+            background-color: teal;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #006666;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Top Section -->
+<div class="top-section d-flex justify-content-between align-items-center">
+    <h1>Create a New Blog Post</h1>
+    <div class="top-buttons">
+        <a href="{% url 'posts' %}" class="btn btn-light">All Posts</a>
+        <a href="{% url 'myposts' %}" class="btn btn-light">My Posts</a>
+        <a href="{% url 'profilepage' %}" class="btn btn-light">Profile</a>
+        <a href="{% url 'logout' %}" class="btn btn-light">Logout</a>
+    </div>
+</div>
+
+<!-- Bottom Section -->
+<div class="bottom-section">
+    <div class="form-box">
+        <h2>Publish Your Blog</h2>
+
+        <!-- Django Messages as Bootstrap Alerts -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Blog Form -->
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="title"><b>Title:</b></label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="Wings of Fire" required>
+            </div>
+
+            <div class="form-group">
+                <label for="category"><b>Category:</b></label>
+                <select id="category" name="category" class="form-control" required>
+                    <option value="" disabled selected>Select a category</option>
+                    <option>Technology</option>
+                    <option>Health</option>
+                    <option>Travel</option>
+                    <option>Food</option>
+                    <option>Education</option>
+                    <option>Lifestyle</option>
+                    <option>Business</option>
+                    <option>Motivation</option>
+                    <option>About Author</option>
+                    <option>Photography</option>
+                    <option>Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="content"><b>Content:</b></label>
+                <textarea rows="6" id="content" name="content" class="form-control" placeholder="Write your blog content here..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="blogphoto"><b>Upload Photo:</b></label>
+                <input type="file" id="blogphoto" name="blogphoto" accept="image/*" class="form-control-file">
+            </div>
+
+            <div class="form-group">
+                <label for="author"><b>Author:</b></label>
+                <input type="text" id="author" name="author" class="form-control" value="{{ username }}" readonly>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="date"><b>Date:</b></label>
+                    <input type="date" id="date" name="date" class="form-control" readonly>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="time"><b>Time:</b></label>
+                    <input type="time" id="time" name="time" class="form-control" readonly>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Publish</button>
+        </form>
+    </div>
+</div>
+
+<!-- Auto-fill Date & Time -->
+<script>
+    window.onload = function() {
+        const now = new Date();
+        document.getElementById('date').value = now.toISOString().split('T')[0];
+        document.getElementById('time').value = now.toTimeString().slice(0,5);
+    }
+</script>
+
+</body>
+</html>

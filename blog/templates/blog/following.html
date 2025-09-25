@@ -1,0 +1,74 @@
+{% load static %}
+<html>
+<head>
+    <title>Following of {{ author_username }}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="bg-light">
+<div class="container mt-4">
+   
+    <div class="d-flex justify-content-between align-items-center mt-4">
+    <h3>Followers of {{ author_username }}</h3>
+    <a href="{% url 'aboutauthor' author_username %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+<hr>
+
+    <hr>
+    {% if following %}
+        <ul class="list-group">
+            {% for person in following %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'aboutauthor' person.username %}" class="d-flex align-items-center text-decoration-none text-dark">
+                    <img src="{{ person.profilephoto }}" 
+                         style="width:50px; height:50px; border-radius:50%; object-fit:cover; margin-right:15px;">
+                    <strong>{{ person.username }}</strong>
+                    </a>
+                </div>
+
+                {% if request.session.username and person.username != request.session.username %}
+                    <button 
+                        class="btn btn-sm follow-btn {% if person.is_following %}btn-outline-primary{% else %}btn-primary{% endif %}" 
+                        data-username="{{ person.username }}">
+                        {% if person.is_following %}Following{% else %}Follow{% endif %}
+                    </button>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted">Not following anyone yet.</p>
+    {% endif %}
+</div>
+
+<script>
+$(document).on('click', '.follow-btn', function(){
+    let button = $(this);
+    let username = button.data('username');
+
+    $.ajax({
+        url: "{% url 'toggle_follow' %}",
+        method: "POST",
+        data: {
+            'follow_author': username,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(response){
+            if(response.status === "followed"){
+                button.removeClass('btn-primary')
+                      .addClass('btn-outline-primary')
+                      .text("Following");
+            } else if(response.status === "unfollowed"){
+                button.removeClass('btn-outline-primary')
+                      .addClass('btn-primary')
+                      .text("Follow");
+            }
+        }
+    });
+});
+</script>
+</body>
+</html>

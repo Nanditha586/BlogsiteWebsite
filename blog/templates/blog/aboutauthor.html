@@ -1,0 +1,235 @@
+{% load static %}
+<html>
+<head>
+    <title>{{ author.username }} - Profile</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<style>
+    .card-fixed {
+        height: 420px; /* Equal card size */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .card-body {
+        overflow: hidden;
+    }
+    .short-content {
+        font-size: 14px;
+        line-height: 1.4em;
+        max-height: 3.2em; /* ~3 lines */
+        overflow: hidden;
+    }
+    .comments-box {
+        max-height: 100px;   /* adjust height as needed */
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 8px;
+        background: #f9f9f9;
+    }
+</style>
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="card p-4 shadow-lg">
+        <div class="d-flex align-items-center">
+            <img src="{{ author.profilephoto }}" alt="Profile" 
+                 style="width:100px; height:100px; border-radius:50%; object-fit:cover; margin-right:20px;">
+            <div>
+                <h3>{{ author.username }}</h3>
+                <p>For collaborations: {{ author.email }}</p>
+
+                <!-- Follow Button -->
+                {% if request.session.email and author.username != logged_in_user %}
+                <form method="post" class="mb-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="follow_author" value="{{ author.username }}">
+                    <button type="submit" class="btn btn-sm {% if is_following %}btn-outline-primary{% else %}btn-primary{% endif %}">
+                        {% if is_following %}Following{% else %}Follow{% endif %}
+                    </button>
+                </form>
+                {% endif %}
+
+                <!-- Stats -->
+                <div class="d-flex mb-3">
+                    <div class="mx-3">
+                        <p><strong>{{ author.total_posts }}</strong></p>
+                        <h6>Posts</h6>  
+                    </div>
+                    <div class="mx-3 ">
+                        <p><strong><a href="{% url 'followers' author.username %}" style="color: black;">{{ author.total_followers }}</a></strong> </p>
+                        <h6><a href="{% url 'followers' author.username %}" style="color: black;">Followers</a></h6>
+                    </div>
+
+                   <div class="mx-3 ">
+                        <p><strong><a href="{% url 'following' author.username %}" style="color:black">{{ author.total_following }}</a></strong></p>
+                        <h6><a href="{% url 'following' author.username %}" style="color:black">Following</a> </h6>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <p><strong>{{ author.bio }}</strong></p>
+        <hr>
+
+        <h4>Posts by {{ author.username }}</h4>
+        <div class="row">
+            {% for post in posts %}
+            <div class="col-md-4 mb-3">
+                <div class="card card-fixed">
+                    {% if post.blogphoto %}
+                        <img src="{{ post.blogphoto }}" class="card-img-top" style="height:180px; object-fit:cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5>{{ post.title }}</h5>
+                        <p class="short-content">{{ post.content }}</p>
+                        <div>
+                        <!-- Like Button -->
+                            {% if request.session.email %}
+                            <button type="button"
+    class="btn btn-sm like-btn {% if post.is_liked %}btn-danger{% else %}btn-outline-danger{% endif %}"
+    data-title="{{ post.title }}">
+    ❤️ <span class="like-count">{{ post.likes }}</span>
+</button>
+
+                            {% endif %}
+
+                        <!-- Read More Button -->
+                        <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#postModal{{ forloop.counter }}">
+                            Read More
+                        </button>
+                        </div>
+                    </div>
+                    <small>{{ post.date }} {{ post.time }}</small>
+                </div>
+            </div>
+
+            <!-- Modal for Full Post -->
+            <div class="modal fade" id="postModal{{ forloop.counter }}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">{{ post.title }}</h5>
+                            <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            {% if post.blogphoto %}
+                                <img src="{{ post.blogphoto }}" class="img-fluid mb-3" style="border-radius:8px;">
+                            {% endif %}
+                            <p>{{ post.content }}</p>
+                            <small>{{ post.date }} {{ post.time }}</small>
+
+                            <!-- Like Button -->
+                            {% if request.session.email %}
+                            <button type="button"
+    class="btn btn-sm like-btn {% if post.is_liked %}btn-danger{% else %}btn-outline-danger{% endif %}"
+    data-title="{{ post.title }}">
+    ❤️ <span class="like-count">{{ post.likes }}</span>
+</button>
+
+                            {% endif %}
+
+                            <hr>
+                            <!-- Comments Section -->
+<h6>Comments</h6>
+<div class="comments-box">
+    {% if post.comments %}
+        {% for comment in post.comments %}
+            <div class="border rounded p-2 mb-2 bg-white">
+                <strong>{{ comment.commenter }}</strong>: {{ comment.comment }}
+                <br>
+                <small class="text-muted">{{ comment.date }} {{ comment.time }}</small>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-muted">No comments yet.</p>
+    {% endif %}
+</div>
+
+
+                            <!-- Add Comment -->
+                            {% if request.session.email %}
+                           <form class="comment-form mt-2" data-title="{{ post.title }}">
+    {% csrf_token %}
+    <textarea name="comment" rows="2" class="form-control mb-2" placeholder="Write a comment..." required></textarea>
+    <button type="submit" class="btn btn-sm btn-primary">Add Comment</button>
+</form>
+
+                            {% else %}
+                            <p class="text-muted">Please <a href="{% url 'login' %}">login</a> to comment.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p>No posts yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<script>
+$(document).ready(function(){
+
+    // ---------------- Like Toggle ----------------
+    $(document).on('click', '.like-btn', function(){
+        let button = $(this);
+        let postTitle = button.data('title');
+
+        $.ajax({
+            url: "{% url 'toggle_like' %}",  // Django view endpoint
+            method: "POST",
+            data: {
+                'post_title': postTitle,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response){
+                button.find('.like-count').text(response.likes);  // update like count
+                if(response.is_liked){
+                    button.removeClass('btn-outline-danger').addClass('btn-danger');
+                } else {
+                    button.removeClass('btn-danger').addClass('btn-outline-danger');
+                }
+            }
+        });
+    });
+
+    // ---------------- Add Comment ----------------
+    $(document).on('submit', '.comment-form', function(e){
+        e.preventDefault();
+        let form = $(this);
+        let postTitle = form.data('title');
+        let commentText = form.find('textarea[name="comment"]').val();
+        let commentsBox = form.closest('.modal-body').find('.comments-box');
+
+        $.ajax({
+            url: "{% url 'add_comment' %}",
+            method: "POST",
+            data: {
+                'post_title': postTitle,
+                'comment': commentText,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response){
+                // Add new comment dynamically
+                commentsBox.prepend(`
+                    <div class="border rounded p-2 mb-2 bg-white">
+                        <strong>${response.commenter}</strong>: ${response.comment}
+                        <br>
+                        <small class="text-muted">${response.date} ${response.time}</small>
+                    </div>
+                `);
+                form.find('textarea[name="comment"]').val(""); // clear box
+            }
+        });
+    });
+
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,168 @@
+{% load static %}
+<html>
+<head>
+    <title>My Profile</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: white;
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .profile-card {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 30px;
+            width: 600px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        .profile-photo {
+            border-radius: 50%;
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            margin-bottom: 20px;
+            border: 3px solid teal;
+        }
+        .btn-primary, .btn-success {
+            background-color: teal;
+            border: none;
+        }
+        .btn-primary:hover, .btn-success:hover {
+            background-color: #006666;
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-card">
+        {% if user.profilephoto %}
+            <img src="data:image/jpeg;base64,{{ user.profilephoto|safe }}" alt="Profile Photo" class="profile-photo">
+        {% else %}
+            <img src="{% static 'images/default.png' %}" alt="Default Profile" class="profile-photo">
+        {% endif %}
+
+
+        <h2>{{ user.username }}</h2>
+
+<div class="d-flex justify-content-center mb-3">
+    <div class="mx-3 text-center">
+        <a href="{% url 'profilefollower' user.username %}" style="color:black">Followers</a>
+        <p><strong>{{ user.followers }}</strong></p>
+    </div>
+    <div class="mx-3 text-center">
+       <a href="{% url 'profilefollowing' user.username %}" style="color:black">Following</a>
+
+        <p><strong>{{ user.following }}</strong></p>
+    </div>
+</div>
+        <p><strong>Bio:</strong> {{user.bio}}</p>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Password:</strong> {{ user.password }}</p>
+        <p><strong>Phone:</strong> {{ user.phonenumber }}</p>
+
+        <div class="mt-3">
+            <a href="{% url 'posts' %}" class="btn btn-primary">View Posts</a>
+            <a href="{% url 'myposts' %}" class="btn btn-primary">My Posts</a>
+            <a href="{% url 'create_post' %}" class="btn btn-success">Create Post</a>
+            <button class="btn btn-warning" data-toggle="modal" data-target="#editModal">Edit Profile</button>
+            <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" enctype="multipart/form-data" action="{% url 'edit_profile' %}">
+                    {% csrf_token %}
+                    <div class="modal-header bg-teal text-white">
+                        <h5 class="modal-title">Edit Profile</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" name="username" class="form-control" value="{{ user.username }}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" name="phonenumber" class="form-control" 
+                                   value="{{ user.phonenumber }}" pattern="[0-9]{10}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email (cannot edit)</label>
+                            <input type="email" name="email" class="form-control" value="{{ user.email }}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" name="password" class="form-control">
+                        </div>
+                        <!-- Profile Photo Upload -->
+                        <div class="form-group">
+                            <label for="profilephoto">Photo</label>
+                            <input type="file" name="profilephoto" class="form-control" accept="image/*">
+                            {% if user.profilephoto %}
+                                <div class="mt-2">
+                                    <img src="data:image/jpeg;base64,{{ user.profilephoto }}" 
+                                         alt="Current Image" style="max-width:100px; border-radius:6px;">
+                                    <div>
+                                        <input type="checkbox" name="remove_photo" value="true"> Remove Current Photo
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label>Bio</label>
+                            <input type="text" name="bio" class="form-control" value="{{ user.bio }}" >
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Popup Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Success</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function(){
+            {% if messages %}
+                $('#successModal').modal('show');
+            {% endif %}
+        });
+    </script>
+</body>
+</html>

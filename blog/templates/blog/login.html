@@ -1,0 +1,96 @@
+{% load static %}
+<html>
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            background-color: white;
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 25px;
+            background-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0px 5px 12px rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            border: 2px solid teal;
+        }
+
+        .form-box h1 {
+            text-align: center;
+            color: teal;
+            margin-bottom: 20px;
+        }
+
+        .btn-primary {
+            background-color: teal;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #006666;
+        }
+
+        .extra-links {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .extra-links a {
+            color: teal;
+            font-weight: bold;
+        }
+        .extra-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="form-box">
+        <h1>Login</h1>
+
+        <!-- Bootstrap Alert for Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="email"><b>Email:</b></label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password"><b>Password:</b></label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Login</button>
+        </form>
+
+        <div class="extra-links">
+            <p>New User? <a href="{% url 'register' %}">Register here</a></p>
+            <a href="{% url 'home' %}" class="btn btn-link">← Back to Home</a>
+        </div>
+    </div>
+
+</body>
+</html>

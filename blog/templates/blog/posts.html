@@ -1,0 +1,506 @@
+{% load static %}
+<html>
+<head>
+    <title>Blog Posts</title>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- jQuery & Bootstrap JS -->
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+    <style>
+        /* -------------------- Post Card Styling -------------------- */
+        .post-card {
+            background-color: rgba(255,255,255,0.9);
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            height: auto; /* remove fixed height to fit more content */
+            min-height: 380px;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
+            position: relative;  
+        }
+        /* Wider cards - show 2 per row on large screens */
+@media (min-width: 992px) {
+    .col-lg-4 {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+/* Make search bar wider */
+.input-group .form-control {
+    min-width: 400px;
+}
+
+/* Align author and follow button side by side */
+.author-follow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+        .post-card h3 { 
+            color: teal; 
+            font-size: 20px; 
+        }
+
+        /* Short preview of content */
+        .short-content {
+            font-size: 14px;
+            line-height: 1.4em;
+            max-height: 2.8em; /* ~2 lines */
+            overflow: hidden;
+        }
+
+        /* -------------------- Page Background & Header -------------------- */
+        .bottom {
+           background-color: white; 
+            background-size: cover; 
+            min-height: 100vh; 
+            padding: 40px;
+        }
+        .top-section {
+            font-size: 20px;
+            background-color: teal;
+            color: white;
+            padding: 32px;
+            text-align: center;
+        }
+
+        /* Date & Time at bottom-right of post card */
+        .date-time {
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            font-size: 12px;
+            color: #555;
+            display: flex;
+            gap: 8px;
+        }
+
+        /* -------------------- Comment Section -------------------- */
+        .comment-section {
+            margin-top: 20px;
+            border-top: 1px solid #ccc;
+            padding-top: 15px;
+        }
+        .comment-box {
+            max-height: 120px; /* Shows ~2 comments with scroll */
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .comment {
+            background: #f9f9f9;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .comment strong { color: teal; }
+    </style>
+</head>
+<body>
+
+    <!-- -------------------- Header Section -------------------- -->
+    <div class="top-section d-flex justify-content-between align-items-center">
+        <h1 class="m-0">Blog Posts</h1>
+        <div class="top-buttons">
+            <a href="{% url 'profilepage' %}" class="btn btn-light">Profile Page</a>
+            <a href="{% url 'create_post' %}" class="btn btn-light">Create Post</a>
+            <a href="{% url 'myposts' %}" class="btn btn-light">My Posts</a>
+            <a href="{% url 'logout' %}" class="btn btn-light">Logout</a>
+        </div>
+    </div>
+
+    <!-- -------------------- Main Content Section -------------------- -->
+    <div class="bottom-section bottom">
+        <div class="container">
+
+            <!-- -------------------- Search & Filter Form -------------------- -->
+            <form method="get" class="mb-4">
+                <div class="input-group">
+
+                    <!-- Search Bar -->
+                    <input type="text" name="q" value="{{ search_query }}" 
+                           class="form-control" 
+                           placeholder="Search by Title, Author, Date, or Category">
+
+                    <!-- Filter Dropdown -->
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-light bg-success dropdown-toggle" 
+                                type="button" id="filterDropdown" 
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-filter"></i>
+                        </button>
+
+                        <!-- Filter Dropdown Menu -->
+                        <div class="dropdown-menu p-3" style="min-width: 250px;">
+                            <!-- Search box for categories -->
+                            <input type="text" id="filterSearch" 
+                                   class="form-control mb-2" 
+                                   placeholder="Search categories...">
+
+                            <!-- Select / Clear all buttons -->
+                            <div class="d-flex justify-content-between mb-2">
+                                <button type="button" id="selectAll" class="btn btn-sm btn-success">Select All</button>
+                                <button type="button" id="clearAll" class="btn btn-sm btn-danger">Clear All</button>
+                            </div>
+
+                            <!-- Multi-select Categories -->
+                            <label><strong>Select Categories:</strong></label>
+                            <select name="categories" id="categorySelect" 
+                                    class="form-control" multiple size="8">
+                                <option value="Technology" {% if "Technology" in selected_categories %}selected{% endif %}>Technology</option>
+                                <option value="Health" {% if "Health" in selected_categories %}selected{% endif %}>Health</option>
+                                <option value="Education" {% if "Education" in selected_categories %}selected{% endif %}>Education</option>
+                                <option value="Lifestyle" {% if "Lifestyle" in selected_categories %}selected{% endif %}>Lifestyle</option>
+                                <option value="Food" {% if "Food" in selected_categories %}selected{% endif %}>Food</option>
+                                <option value="Travel" {% if "Travel" in selected_categories %}selected{% endif %}>Travel</option>
+                                <option value="Business" {% if "Business" in selected_categories %}selected{% endif %}>Business</option>
+                                <option value="Motivation" {% if "Motivation" in selected_categories %}selected{% endif %}>Motivation</option>
+                                <option value="About Author" {% if "About_Author" in selected_categories %}selected{% endif %}>About Author</option>
+                                <option value="Photography" {% if "Photography" in selected_categories %}selected{% endif %}>Photography</option>
+                                <option value="Other" {% if "Other" in selected_categories %}selected{% endif %}>Other</option>
+                            </select>
+
+                            <div class="dropdown-divider"></div>
+
+                            <!-- Apply Filter Button -->
+                            <button type="submit" 
+                                    class="btn btn-sm btn-teal btn-block apply-filters" 
+                                    style="background-color: teal; color:white;">
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search Button -->
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-light bg-success" type="submit">Search</button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- -------------------- Blog Posts Grid -------------------- -->
+            <div class="row">
+                {% if page_obj %}
+                    {% for post in page_obj %}
+                        <div class="col-lg-4 col-md-6 col-sm-6 col-12">
+                            <div class="post-card">
+
+                                <!-- Post Title -->
+                                <h3>{{ post.title }}</h3>
+
+                              <div class="d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+        <a href="{% url 'aboutauthor' post.author %}">
+    <img src="{{ post.profilephoto }}" 
+         alt="Profile" 
+         style="width:35px; height:35px; border-radius:50%; object-fit:cover; margin-right:10px;">
+</a>
+<span><strong>Author:</strong> 
+    <a href="{% url 'aboutauthor' post.author %}" style="color: teal; font-weight:bold;">
+        {{ post.author }}
+    </a>
+</span>
+
+    </div>
+
+     {% if request.session.email and post.author != request.session.username %}
+                                        <button 
+                                            type="button"
+                                            class="btn btn-sm follow-btn {% if post.is_following %}btn-outline-primary{% else %}btn-primary{% endif %}"
+                                            data-username="{{ post.author }}">
+                                            {% if post.is_following %}Following{% else %}Follow{% endif %}
+                                        </button>
+                                    {% endif %}
+</div>
+
+                                <!-- Short Content -->
+                                <p class="short-content">{{ post.content }}</p>
+
+                                <!-- Date & Time -->
+                                <div class="date-time">
+                                    <span>{{ post.date }}</span>
+                                    <span>{{ post.time }}</span>
+                                </div>
+
+                                <!-- Read More Button -->
+                                <button class="btn btn-sm btn-primary mt-2" 
+                                        data-toggle="modal" 
+                                        data-target="#postModal{{ forloop.counter }}">
+                                    Read More
+                                </button>
+
+                                <!-- Like Button -->
+                               <button class="btn btn-sm like-btn 
+    {% if post.is_liked %}btn-danger{% else %}btn-outline-danger{% endif %}" 
+    data-title="{{ post.title }}">
+    ❤️ <span class="like-count">{{ post.likes }}</span>
+</button>
+
+
+                                
+                                                               
+                            </div>
+                        </div>
+
+                        <!-- -------------------- Full Blog Post Modal -------------------- -->
+                        <div class="modal fade" id="postModal{{ forloop.counter }}" tabindex="-1" role="dialog">
+                            <div class="modal-dialog modal-lg" role="document">
+                                <div class="modal-content">
+
+                                    <div class="modal-header bg-teal text-white">
+                                        <h5 class="modal-title">{{ post.title }}</h5>
+                                        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                                    </div>
+
+                                    <div class="modal-body">
+                                        <!-- Title -->
+                                        <h3>{{ post.title }}</h3>
+
+                                        <!-- Author -->
+                                        <p class="d-flex align-items-center">
+                                            <img src="{{ post.profilephoto }}" alt="Profile" 
+                                                 style="width:40px; height:40px; border-radius:50%; object-fit:cover; margin-right:10px;">
+                                            <strong>Author:</strong> {{ post.author }}
+                                        </p>
+
+                                        <!-- Blog Photo -->
+                                        {% if post.blogphoto %}
+                                            <img src="{{ post.blogphoto }}" alt="Blog Image" 
+                                                 class="card-img-top mb-3" 
+                                                 style="border-radius:8px; max-height:300px; object-fit:cover;">
+                                        {% endif %}
+
+                                        <!-- Full Content -->
+                                        <p>{{ post.content }}</p>
+
+                                        <!-- Date & Time -->
+                                        <div class="date-time">
+                                            <span>{{ post.date }}</span>
+                                            <span>{{ post.time }}</span>
+                                        </div>
+
+                                        <!-- Comments Section -->
+                                        <div class="comment-section">
+                                            <h6>Comments</h6>
+                                            <div class="comment-box">
+                                                {% if post.comments %}
+                                                    {% for comment in post.comments %}
+                                                        <div class="comment">
+                                                            <strong>{{ comment.commenter }}</strong>: {{ comment.comment }}
+                                                            <small class="text-muted">
+                                                                ({{ comment.date }} {{ comment.time }})
+                                                            </small>
+                                                        </div>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <p class="text-muted">No comments yet.</p>
+                                                {% endif %}
+                                            </div>
+
+
+                                            
+                                            <!-- Add Comment Form -->
+                                            {% if request.session.email %}
+                                                <textarea class="form-control comment-input" 
+          data-title="{{ post.title }}" 
+          placeholder="Write a comment..."></textarea>
+<button class="btn btn-sm btn-primary mt-1 add-comment-btn" data-title="{{ post.title }}">
+    Add Comment
+</button>
+
+
+
+
+                                            {% else %}
+                                                <p class="text-muted">
+                                                    Please <a href="{% url 'login' %}">login</a> to comment.
+                                                </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- No Posts Message -->
+                    <div class="col-12">
+                        <p class="text-white text-center">
+                            No blog posts yet. Be the first to 
+                            <a href="{% url 'create_post' %}" class="text-warning">create one!</a>
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- -------------------- Pagination -------------------- -->
+            {% if page_obj.has_other_pages %}
+                <div class="d-flex justify-content-center mt-4">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            <!-- Previous -->
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% for cat in selected_categories %}&categories={{ cat }}{% endfor %}">&laquo;</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                            {% endif %}
+
+                            <!-- Page Numbers -->
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}{% for cat in selected_categories %}&categories={{ cat }}{% endfor %}">
+                                            {{ num }}
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            <!-- Next -->
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% for cat in selected_categories %}&categories={{ cat }}{% endfor %}">&raquo;</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- -------------------- JavaScript for Filters -------------------- -->
+    <script>
+        $(document).ready(function(){
+            // Prevent dropdown from closing when clicking inside
+            $('.dropdown-menu').on('click', function(e) { e.stopPropagation(); });
+
+            // Select all categories
+            $('#selectAll').click(function(){ 
+                $("#categorySelect option").prop("selected", true); 
+            });
+
+            // Clear all categories
+            $('#clearAll').click(function(){ 
+                $("#categorySelect option").prop("selected", false); 
+            });
+
+            // Filter categories dynamically
+            $("#filterSearch").on("keyup", function() {
+                var value = $(this).val().toLowerCase();
+                $("#categorySelect option").filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                });
+            });
+
+            // Close dropdown after applying filters
+            $(".apply-filters").on("click", function() {
+                $('#filterDropdown').dropdown('toggle');
+            });
+        });
+ $(document).on('click', '.follow-btn', function(){
+        let button = $(this);
+        let username = button.data('username');
+
+        $.ajax({
+            url: "{% url 'toggle_follow' %}",
+            method: "POST",
+            data: {
+                'follow_author': username,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response){
+                if(response.status === "followed"){
+                    button.removeClass('btn-primary')
+                          .addClass('btn-outline-primary')
+                          .text("Following");
+                } else if(response.status === "unfollowed"){
+                    button.removeClass('btn-outline-primary')
+                          .addClass('btn-primary')
+                          .text("Follow");
+                }
+            }
+        });
+    });
+
+$(document).ready(function(){
+    // LIKE Button Handler
+    $('.like-btn').click(function(){
+        const button = $(this);
+        const title = button.data('title');
+
+        $.ajax({
+            url: '{% url "toggle_like" %}',
+            method: 'POST',
+            data: {
+                'post_title': title,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.status === 'liked') {
+                    button.removeClass('btn-outline-danger').addClass('btn-danger');
+                } else {
+                    button.removeClass('btn-danger').addClass('btn-outline-danger');
+                }
+                button.find('.like-count').text(response.likes);
+            }
+        });
+    });
+
+    // COMMENT Submit Handler
+    $('.add-comment-btn').click(function(){
+        const button = $(this);
+        const title = button.data('title');
+        const textarea = $(`.comment-input[data-title="${title}"]`);
+        const commentText = textarea.val();
+
+        if (commentText.trim() === '') return;
+
+        $.ajax({
+            url: '{% url "add_comment" %}',
+            method: 'POST',
+            data: {
+                'post_title': title,
+                'comment': commentText,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                const commentBox = textarea.closest('.modal-body').find('.comments-box');
+                const newComment = `
+                    <div class="border rounded p-2 mb-2 bg-white">
+                        <strong>${response.commenter}</strong>: ${response.comment}
+                        <br><small class="text-muted">${response.date} ${response.time}</small>
+                    </div>
+                `;
+                commentBox.prepend(newComment);
+                textarea.val('');
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>

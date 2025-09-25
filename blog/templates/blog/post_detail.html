@@ -1,0 +1,4 @@
+<h1>Hello{{ post.title }}</h1>
+<p>{{ post.content }}</p>
+<p><em>by {{ post.author }} on {{ post.created_at }}</em></p>
+<a href="{% url 'home' %}">Back to all posts</a>
