@@ -491,3 +491,128 @@ def add_comment(request):
         conn.close()
         return JsonResponse({'comments': comments})
     return JsonResponse({'status': 'error'})
+
+def profilefollowing(request, username):
+    if not request.session.get('username'):
+        return redirect('login')
+
+    logged_in_user = request.session['username']
+
+    conn = get_connection()  # SQLite connection with dict_factory
+    cursor = conn.cursor()
+
+    # Handle follow/unfollow toggle
+    if request.method == "POST":
+        follow_author = request.POST.get('follow_author')
+        cursor.execute(
+            "SELECT * FROM followers WHERE follower_username=? AND following_author=?",
+            (logged_in_user, follow_author)
+        )
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.execute(
+                "DELETE FROM followers WHERE follower_username=? AND following_author=?",
+                (logged_in_user, follow_author)
+            )
+        else:
+            cursor.execute(
+                "INSERT INTO followers (follower_username, following_author, date_followed) VALUES (?, ?, ?)",
+                (logged_in_user, follow_author, date.today())
+            )
+        conn.commit()
+        return redirect('profilefollowing', username=username)
+
+    # Get list of people the author is following
+    cursor.execute("""
+        SELECT r.username, r.profilephoto,
+        CASE 
+            WHEN f2.follower_username IS NOT NULL THEN 1
+            ELSE 0
+        END as is_following
+        FROM followers f
+        JOIN register r ON f.following_author = r.username
+        LEFT JOIN followers f2
+            ON f2.follower_username = ?
+           AND f2.following_author = r.username
+        WHERE f.follower_username = ?
+    """, (logged_in_user, username))
+
+    following = cursor.fetchall()
+
+    # Convert BLOB to Base64
+    for person in following:
+        if person['profilephoto']:
+            person['profilephoto'] = "data:image/jpeg;base64," + base64.b64encode(person['profilephoto']).decode('utf-8')
+        else:
+            person['profilephoto'] = "/static/images/default.png"
+
+    conn.close()
+
+    return render(request, 'blog/profilefollowing.html', {
+        'following': following,
+        'author_username': username
+    })
+
+
+def profilefollower(request, username):
+    if not request.session.get('username'):
+        return redirect('login')
+
+    logged_in_user = request.session['username']
+
+    conn = get_connection()  # SQLite connection with dict_factory
+    cursor = conn.cursor()
+
+    # Handle follow/unfollow POST
+    if request.method == "POST":
+        follow_author = request.POST.get('follow_author')
+        cursor.execute(
+            "SELECT * FROM followers WHERE follower_username=? AND following_author=?",
+            (logged_in_user, follow_author)
+        )
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.execute(
+                "DELETE FROM followers WHERE follower_username=? AND following_author=?",
+                (logged_in_user, follow_author)
+            )
+        else:
+            cursor.execute(
+                "INSERT INTO followers (follower_username, following_author, date_followed) VALUES (?, ?, ?)",
+                (logged_in_user, follow_author, date.today())
+            )
+        conn.commit()
+        return redirect('profilefollower', username=username)
+
+    # Get followers of the author
+    cursor.execute("""
+        SELECT r.username, r.profilephoto,
+        CASE 
+            WHEN f2.follower_username IS NOT NULL THEN 1
+            ELSE 0
+        END as is_following
+        FROM followers f
+        JOIN register r ON f.follower_username = r.username
+        LEFT JOIN followers f2
+            ON f2.follower_username = ?
+           AND f2.following_author = r.username
+        WHERE f.following_author = ?
+    """, (logged_in_user, username))
+
+    followers = cursor.fetchall()
+
+    # Convert BLOB to Base64
+    for follower in followers:
+        if follower['profilephoto']:
+            follower['profilephoto'] = "data:image/jpeg;base64," + base64.b64encode(follower['profilephoto']).decode('utf-8')
+        else:
+            follower['profilephoto'] = "/static/images/default.png"
+
+    conn.close()
+
+    return render(request, 'blog/profilefollower.html', {
+        'followers': followers,
+        'author_username': username
+    })
