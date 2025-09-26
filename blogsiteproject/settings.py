@@ -24,8 +24,19 @@ SECRET_KEY = "django-insecure-wg&w14ht9=j(9#wl8iul+5xsn-1*=%%nzepj)sh)4!hil_j_qo
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+# Allow your Render domain
+CSRF_TRUSTED_ORIGINS = [
+    "https://blogsitewebsite-1.onrender.com",
+]
 
-ALLOWED_HOSTS = ["*"]
+# Also make sure ALLOWED_HOSTS is set
+ALLOWED_HOSTS = [
+    "blogsitewebsite-1.onrender.com",
+    "localhost",
+    "127.0.0.1",
+]
+
+
 
 
 # Application definition
