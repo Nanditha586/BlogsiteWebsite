@@ -95,6 +95,14 @@ def login(request):
     else:
         return render(request, 'blog/login.html')
 
+def logout(request):
+    try:
+        # Remove email from session if exists
+        if('email' in request.session):
+             del request.session["email"]
+    except KeyError:
+        pass
+    return redirect('login')
 # Create a new blog post
 def create_post(request):
     if not request.session.get('email'):
